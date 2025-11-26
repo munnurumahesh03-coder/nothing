@@ -48,7 +48,7 @@ The primary objective was to build a highly accurate machine learning model to p
 This project uses the dataset from the Kaggle "Binary Classification with a Tabular Loan Dataset" Playground competition. It contains a rich set of anonymized features about loan applicants.
 
 - **Features:** The data includes a mix of continuous and categorical features, such as `income`, `employment_type`, `education_level`, and various credit history indicators.
-- **Target Variable:** The target variable is `loan_repaid`, a binary indicator of whether the customer successfully repaid their loan.
+- **Target Variable:** The target variable is `loan_paid_back`, a binary indicator of whether the customer successfully repaid their loan.
 - **Challenge:** The dataset presents a significant class imbalance and features with high cardinality, making it a perfect test case for advanced encoding and validation techniques.
 
 ---
