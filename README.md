@@ -29,7 +29,7 @@ The project emphasizes the critical lesson that **80% of model performance comes
 - **Data Analysis:** `Pandas`, `NumPy`, `Matplotlib`, `Seaborn`
 - **Modeling:** `LightGBM`, `XGBoost`, `CatBoost`, `Scikit-learn`
 - **Preprocessing:** `Scikit-learn` (`ColumnTransformer`), `category_encoders`
-- **Validation:** `Scikit-learn` (`StratifiedKFold`), Adversarial Validation
+- **Validation:** `Scikit-learn` (`StratifiedKFold`), `Adversarial Validation`
 - **Version Control:** `Git` & `GitHub`
 
 ---
