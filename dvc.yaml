@@ -1,0 +1,7 @@
+stages:
+  my_experiment:
+    cmd: python mycode.py
+    deps:
+    - mycode.py
+    outs:
+    - output/
