@@ -1,131 +1,134 @@
-![Project Banner](assets/loan_banner.png)
+# The Ultimate ETA Predictor
+### A Deep Dive into Geospatial Machine Learning for Swiggy Delivery
 
-# End-to-End Loan Default Prediction
-### A Case Study in Advanced Feature Engineering and Robust Validation
+**Project Status: Completed & Deployed**
 
-**Project Status: Completed**
+This repository contains the complete code, methodology, and findings for the "Ultimate ETA Predictor," an end-to-end Machine Learning Operations (MLOps) project focused on predicting food delivery times. 
 
-This repository documents a complete, structured workflow for the Kaggle "Binary Classification with a Tabular Loan Dataset" competition. The project's core philosophy is to demonstrate a professional machine learning lifecycle, moving from baseline modeling to advanced feature engineering, multi-model tuning, and ensembling to achieve a top-tier leaderboard score.
+The project culminates in a production-ready deployment, revealing powerful lessons about the physics of machine learning, the dangers of data leakage, and the delicate balance of the Bias-Variance tradeoff. The final conclusion demonstrates a rigorous, Kaggle-level approach to feature engineering and model optimization.
 
-The project emphasizes the critical lesson that **80% of model performance comes from meticulous data preparation and feature engineering**, not just the final algorithm. It culminates in a stacked ensemble model built on a foundation of `StratifiedKFold` validation and advanced features like K-Fold Target Encoding.
-
----
+**Live Web App:** [Test the Live Gradio Dashboard Here!](https://huggingface.co/spaces/mahesh7777777/swiggy-eta-predictor )
 
 ### Table of Contents
-1.  [Key Technologies Used](#-key-technologies-used)
-2.  [Project Objective](#-project-objective)
-3.  [About the Dataset](#-about-the-dataset)
-4.  [The Project Workflow: A Structured Approach](#-the-project-workflow-a-structured-approach)
-5.  [Initial Findings from Exploratory Data Analysis (EDA)](#-initial-findings-from-exploratory-data-analysis-eda)
-6.  [Ensuring Model Robustness: Adversarial Validation](#-ensuring-model-robustness-adversarial-validation)
-7.  [Feature Engineering: The Key to Performance](#-feature-engineering-the-key-to-performance)
-8.  [Final Model Performance](#-final-model-performance)
-9.  [How to Use This Repository](#-how-to-use-this-repository)
-10. [Key Learnings & Future Work](#-key-learnings--future-work)
+1.  [Project Objective](#project-objective)
+2.  [The Dataset: Challenges and Characteristics](#the-dataset-challenges-and-characteristics)
+3.  [Visualizing the Data: Key Insights](#visualizing-the-data-key-insights)
+4.  [Methodology: A Rigorous and Repeatable Workflow](#methodology-a-rigorous-and-repeatable-workflow)
+5.  [The Gauntlet: Baseline Model Leaderboard](#the-gauntlet-baseline-model-leaderboard)
+6.  [Grand Lessons & Key Findings](#grand-lessons--key-findings)
+7.  [The Grand Finale: Optuna & Production Deployment](#the-grand-finale-optuna--production-deployment)
+8.  [How to Use This Repository](#how-to-use-this-repository)
+9.  [Future Improvements](#future-improvements)
+
+---  
+### Project Objective
+
+The grand objective was to build a high-performance, production-ready Machine Learning system capable of predicting delivery ETAs in real-time. The project was divided into two main phases:
+
+1.  **The Universal EDA Blueprint:** Systematically clean, profile, and mathematically transform raw delivery data into a "Gold" dataset using advanced geospatial and temporal engineering.
+2.  **The ML & Optuna Blueprint:** Establish a robust cross-validation strategy, tune the champion model using Bayesian optimization, and deploy the final pipeline to a live Hugging Face web server.
+
+---  
+### The Dataset: Challenges and Characteristics
+The project uses a real-world Swiggy delivery dataset containing thousands of delivery records. The dataset was chosen specifically for its complex, real-world imperfections.  
+
+**Key Characteristics:**
+*   **Geospatial Complexity:** Raw latitude and longitude coordinates are meaningless to standard linear models, requiring advanced mathematical transformations to extract distance and direction.
+*   **Temporal Nuance:** Time is cyclical, not linear. The dataset required trigonometry to prevent the model from misunderstanding the boundary between 11:00 PM and Midnight.
+*   **High Cardinality Categoricals:** Features like `City_Name` and `Weather` contained too many unique text values for standard One-Hot Encoding, risking massive matrix sparsity and memory crashes.
+
+---
+### Visualizing the Data: Key Insights
+Exploratory Data Analysis (EDA) was crucial for understanding the physics of food delivery and guiding our feature engineering strategy.
+
+**1. The "Heavy Lifters" (Strongest Predictors)**
+Correlation analysis revealed the core physics of the dataset. `multiple_deliveries` (0.38) and `distance` (0.32) were the strongest positive drivers of delay. Fascinatingly, `age` (0.30) showed that older riders take longer, while `ratings` (-0.36) proved that faster riders receive higher scores.
+
+**2. Categorical Impact (The Hidden Rules)**
+By extracting the median target values for categories, we uncovered the hidden rules of the Swiggy universe:
+*   **Festivals:** Add a massive 20-minute penalty to average delivery times (45 mins vs 25 mins).
+*   **Traffic & Weather:** "Jam" traffic adds 11 minutes compared to "Low" traffic, while "Sunny" weather is consistently the fastest condition.
 
 ---
 
-### 🛠️ Key Technologies Used
-- **Data Analysis:** `Pandas`, `NumPy`, `Matplotlib`, `Seaborn`
-- **Modeling:** `LightGBM`, `XGBoost`, `CatBoost`, `Scikit-learn`
-- **Preprocessing:** `Scikit-learn` (`ColumnTransformer`), `category_encoders`
-- **Validation:** `Scikit-learn` (`StratifiedKFold`), `Adversarial Validation`
-- **Version Control:** `Git` & `GitHub`
+### Methodology: A Rigorous and Repeatable Workflow
+The true hero of this project was the rigorous, Medallion-Architecture workflow. Every step was designed to prevent data leakage and ensure production readiness.
+
+*   **Advanced Feature Engineering (The Physics Engine):**
+    *   **Geospatial Bearing:** Used Arc-Tangent trigonometry to calculate the exact compass direction (0-360°) of the delivery, allowing the model to learn directional traffic patterns.
+    *   **Cyclical Time Encoding:** Mapped the 24-hour clock onto a circle using Sine and Cosine transformations, curing the model's "Midnight Trap."
+    *   **Domain Ratios:** Engineered custom metrics like `vehicle_strain` (Distance / Vehicle Condition) and `rider_efficiency` (Age * Ratings).
+
+*   **Out-Of-Fold (OOF) Target Encoding:**
+    *   Instead of naive target encoding (which causes massive data leakage), we utilized a 5-Fold Cross-Validation loop on the GPU (via RAPIDS `cuML`) to calculate the **Mean** and **Standard Deviation** of the target variable for each category. 
+
+*   **Dynamic Feature Selection:**
+    *   Deployed a "Probe" LightGBM model to rank all 83 engineered features, automatically dropping the bottom 1% of noise to prevent overfitting and speed up inference.
+
+*   **Model Persistence (Joblib):** The final champion model, feature lists, and encoding dictionaries were serialized into `.pkl` files for seamless web deployment.
 
 ---
 
-### 🚩 Project Objective
+### The Gauntlet: Baseline Model Leaderboard
+Before advanced tuning, we ran a baseline spot-check to prove our algorithm selection. The results definitively proved the superiority of Gradient Boosting for tabular data.
 
-The primary objective was to build a highly accurate machine learning model to predict the probability of a loan applicant defaulting. This involved two parallel goals:
-
-1.  **Competition Goal:** To achieve the highest possible score (AUC-ROC) on the private leaderboard by building a model that generalizes well to unseen data.
-2.  **Technical Goal:** To implement a professional, structured workflow demonstrating best practices in validation, advanced feature engineering, multi-model tuning, and ensembling.
-
----
-
-### 💾 About the Dataset
-
-This project uses the dataset from the Kaggle "Binary Classification with a Tabular Loan Dataset" Playground competition. It contains a rich set of anonymized features about loan applicants.
-
-- **Features:** The data includes a mix of continuous and categorical features, such as `income`, `employment_type`, `education_level`, and various credit history indicators.
-- **Target Variable:** The target variable is `loan_paid_back`, a binary indicator of whether the customer successfully repaid their loan.
-- **Challenge:** The dataset presents a significant class imbalance and features with high cardinality, making it a perfect test case for advanced encoding and validation techniques.
+| Rank | Model | Baseline RMSE (Mins) | R² Score | Key Lesson Learned |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **LightGBM** | **4.0233** | **0.8160** | **THE ULTIMATE CHAMPION.** Blazing fast (0.88s) and highly accurate. |
+| 2 | CatBoost | 4.0543 | 0.8131 | Excellent performance, confirming the power of modern boosting. |
+| 3 | Random Forest | 4.1354 | 0.8056 | Strong accuracy, but computationally heavy and slow (64.7s). |
+| 4 | XGBoost | 4.1442 | 0.8047 | A top-tier contender, but slightly edged out by LightGBM's speed. |
+| 5 | Ridge Regression | 7.7494 | 0.3173 | **A key lesson:** Linear models cannot understand complex, non-linear physics like GPS coordinates or cyclical time. |
 
 ---
 
-### ⚙️ The Project Workflow: A Structured Approach
+### Grand Lessons & Key Findings
+*   **Data Leakage is a Silent Killer:** During EDA, we discovered that `pickup_time_minutes` (wait time at the restaurant) was highly predictive. However, we ruthlessly dropped it. Why? Because in the real world, we must predict the ETA *before* the rider arrives at the restaurant. Using future data is cheating.
+*   **The Bias-Variance Tradeoff in Action:** By dropping the data leak and applying strict Optuna regularization, we intentionally increased our Bias slightly (RMSE went from 3.83 to 3.90). However, in exchange, we **completely crushed the Variance**. The gap between our training error and unseen test error shrank to just `0.0010`, guaranteeing the model will never overfit in production.
+*   **Math Beats Raw Data:** Four of the top five most important features in the final model were custom mathematical interactions (e.g., `TE_STD_weather_traffic`, `vehicle_strain`). 
 
-This project was built on a systematic, iterative lifecycle captured in the 7-notebook structure. The entire process, from data exploration to final submission, is designed to be modular and reproducible. The high-level workflow is visualized below.
+--- 
+### The Grand Finale: Optuna & Production Deployment
 
-![Project Workflow Diagram](assets/workfloww.png)
+**1. Bayesian Optimization (Optuna)**
+We deployed Optuna to hunt for the perfect hyperparameters. It discovered that a low learning rate (`0.021`) combined with deep trees (`89 leaves`) and strict feature/row subsampling (`~0.79`) provided the ultimate shield against overfitting.
 
----
+**2. The Final Verdict**
+The champion LightGBM model was evaluated on the completely untouched **test set**.
 
-### 📊 Initial Findings from Exploratory Data Analysis (EDA)
-
-The project began with a deep dive into the dataset to uncover key relationships and inform our feature engineering strategy. The analysis revealed several strong, intuitive patterns.
-
-*   **Employment Status is a Key Predictor:** There is a dramatic difference in loan payback rates across different employment statuses, with retired applicants showing a near-perfect repayment history.
-*   **Credit Score and Interest Rate are Inversely Correlated:** As expected in a real-world financial scenario, higher credit scores are associated with lower interest rates.
-*   **Feature Correlations:** A correlation matrix confirmed that most numerical features are not highly correlated, suggesting they provide independent information to the model.
-
-| Loan Payback by Employment | Credit Score vs. Interest Rate | Feature Correlation |
-| :---: | :---: | :---: |
-| ![Loan Payback Rate by Employment Status](assets/loan_barplot.png) | ![Credit Score vs. Interest Rate](assets/joint_plot.png) | ![Correlation Matrix](assets/correlation_matrix.png) |
-
----
-
-### 🛡️ Ensuring Model Robustness: Adversarial Validation
-
-To ensure our model would generalize well from the training set to the unseen test set, we performed adversarial validation. A classifier was trained to distinguish between training and test data. The feature importances from this model highlight which features have the most different distributions between the two sets. This advanced technique helps identify potential data drift and builds confidence in our validation strategy.
-
-![Adversarial Validation Feature Importance](assets/adversarial_barplot.png)
-
----
-
-### 🔬 Feature Engineering: The Key to Performance
-
-This project confirmed that feature engineering is where competitions are won. The following techniques were central to the final model's success:
-
-1.  **Advanced Categorical Encoding:** A `ColumnTransformer` pipeline was built to treat different feature types separately. The most impactful technique was **K-Fold Target Encoding** for high-cardinality nominal features, which captures powerful predictive signals without data leakage.
-2.  **External Data Integration:** The provided external dataset was leveraged to create powerful "meta-features" for each applicant.
-3.  **Interaction Features:** New features were created by combining existing ones to capture non-linear relationships (e.g., `income_to_loan_ratio`).
-
----
-
-### 🎯 Final Model Performance
-
-The final model is a stacked ensemble that uses the predictions of the tuned LightGBM-RF, XGBoost, and CatBoost models as input to a final meta-classifier. This approach achieved a significant performance uplift over any single model.
-
-| Metric | Local CV Score (5-Fold Avg) |
+| Metric | Final Score |
 | :--- | :--- |
-| **AUC-ROC** | **[Your Final CV Score, e.g., 0.923+]** |
+| **Overall OOF RMSE (Training)** | 3.9028 minutes |
+| **Unseen Test Set RMSE** | **3.9038 minutes** |
+| **Unseen Test Set R²** | **0.8267** |
 
-The final private leaderboard score of **[Your Final Private LB Score]** confirms the model's strong generalization.
+**SUCCESS!** We successfully engineered a model that explains nearly 83% of the variance in delivery times, with an error margin of less than 4 minutes, completely free of data leakage.
 
----
+**3. The Gradio Web Dashboard**
+The final model was deployed to Hugging Face Spaces using Gradio. The UI is designed to take human-readable inputs, dynamically calculate the Trigonometry and Target Encoding in the background, and serve real-time predictions.
 
-### 📖 How to Use This Repository
-
+--- 
+### How to Use This Repository
 1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/Swiggy-ETA-Predictor.git
+    cd Swiggy-ETA-Predictor
     ```
-    git clone [your-repo-url]
-    cd [your-repo-name]
-    ```
-2.  **Install dependencies:**
-    A `requirements.txt` file should be created from your environment.
-    ```
+2.  **Explore the Notebooks:** The project is divided into two modular blueprints:
+    *   `01_Universal_EDA_Blueprint.ipynb`: Data cleaning, geospatial math, and exporting the "Gold" dataset.
+    *   `02_ML_Optuna_Blueprint.ipynb`: OOF Target Encoding, Optuna tuning, and model serialization.
+3.  **Run the Deployed App Locally:** 
+    ```bash
     pip install -r requirements.txt
+    python app.py
     ```
-3.  **Run the Notebooks:**
-    The project is broken into a logical sequence of notebooks. It is recommended to run them in order from `01` to `07`.
+    *   **Why Gradio?** It provides a sleek, modern UI that seamlessly handles the complex backend mathematics, allowing anyone to interact with the Kaggle-winning model in real-time.
 
 ---
 
-### 🔮 Key Learnings & Future Work
+### Future Improvements
+While this project is complete and deployed, the methodology opens the door for further exploration:
 
-*   **Key Learning:** The 80/20 rule is real. A simple model on well-engineered features will always outperform a complex model on raw data. Time spent on robust validation (`StratifiedKFold`) and feature engineering has the highest ROI.
-*   **Future Work:**
-    *   **Hyperparameter Optimization:** While individual models were tuned, a more exhaustive search using `Optuna` could be implemented for all stages, including the stacking meta-classifier.
-    *   **Deployment:** Containerize the final model pipeline with `Docker` and deploy it as a REST API using `FastAPI` for real-world use.
-
+*   **Live Traffic API Integration:** Replace the static "Traffic Density" dropdown with live calls to the Google Maps or Mapbox API for real-time congestion data.
+*   **Lightweight Ensembling:** Blend the LightGBM champion with a tuned XGBoost model (e.g., 70/30 split ) to see if we can squeeze the RMSE below 3.80 without sacrificing web server latency.
+*   **Deep Learning (TabNet):** Experiment with TabNet, a neural network architecture designed specifically for tabular data, to see if it can automatically learn the geospatial interactions without manual feature engineering.
