@@ -61,15 +61,13 @@ By extracting the class distribution, we uncovered a massive trap in the dataset
 The true hero of this project was the rigorous workflow. Every step was designed to prevent GPU bottlenecks and ensure production readiness.
 
 *   **Programmatic Data Pruning (The Physics Engine):**
-    *   Engineered a Python script to ruthlessly merge overlapping classes (`minor-damage`, `major-damage`, `destroyed`) into a strict binary classification (`Damaged` vs `Safe`). This cured the class imbalance and aligned the model with the actual business objective.
+    *   To combat the 89% "Safe" bias, we engineered a Python script to ruthlessly merge the overlapping, subjective classes (`minor-damage`, `major-damage`, `destroyed`) into a strict binary classification (`Damaged` vs `Safe`). This cured the class imbalance and aligned the model with the actual business objective.
 
 *   **Compute Optimization (T4 GPU):**
     *   Configured the YOLOv8s training pipeline specifically for cloud constraints. Utilized `batch=32` to maximize VRAM, `cache=True` to bypass slow disk I/O, and `patience=5` (Early Stopping) to prevent overfitting and save compute hours.
 
 *   **SAHI (Slicing Aided Hyper Inference):**
     *   Instead of passing a massive 4K image to the model, SAHI mathematically slices the image into overlapping 320x320 grids, runs predictions on each slice, and stitches the bounding boxes back together using Non-Maximum Suppression (NMS).
-
-*   **Model Persistence:** The final champion model (`best.pt`) was serialized and extracted for seamless web deployment.
 
 ---
 
@@ -85,7 +83,8 @@ We deployed the YOLOv8 Small (`yolov8s.pt`) architecture to hunt for the perfect
 ---
 
 ### Grand Lessons & Key Findings
-*   **The Class Imbalance Trap is a Silent Killer:** During the Data Health Check, we discovered the 89% "Safe" bias. We ruthlessly pruned the dataset. Why? Because in the real world, a model that ignores destroyed buildings to artificially inflate its accuracy score costs lives.
+*   **The Class Imbalance Trap is a Silent Killer:** In the real world, a model that ignores destroyed buildings to artificially inflate its accuracy score costs lives. By programmatically merging the 4 classes into 2, we forced the model to actually learn the visual features of destruction.
+*   **Resource Management (Compute Cost vs. ROI):** We initially planned to use Hyperparameter Evolution (Optuna) and Weighted Boxes Fusion (WBF) Ensembling. However, running CV evolution on a massive 4K satellite dataset requires 24+ hours of GPU compute. We made a strategic architectural decision to skip brute-force GPU burning and instead implement SAHI. This provided a massive accuracy boost on small objects with zero extra training time.
 *   **SAHI Beats Raw Scaling:** Standard YOLO resizes images to 640x640. For a 4K drone image, this destroys the pixel data of a collapsed roof. By implementing SAHI, we preserved the original resolution, proving that **smart inference math beats raw model size**.
 *   **Cloud DevOps & Dependency Hell:** Deploying Computer Vision to the cloud is a DevOps challenge. We overcame `libGL.so.1` C++ driver crashes by dynamically injecting `python3-opencv` into the Linux server via a custom `packages.txt` file.
 
@@ -124,5 +123,5 @@ The final model was deployed to Streamlit Community Cloud. To bridge the gap bet
 While this project is complete and deployed, the methodology opens the door for further exploration:
 
 *   **Live Drone Feed Integration:** Expand the Streamlit dashboard to process live RTSP video streams from drones in real-time.
-*   **Advanced Ensembling:** Blend the YOLOv8s champion with a tuned RT-DETR model using Weighted Boxes Fusion (WBF ) to push accuracy even higher.
-*   **Instance Segmentation:** Upgrade from object detection (bounding boxes) to instance segmentation (YOLOv8-seg) to calculate the exact square footage of roof damage for insurance payouts.
+*   **Hyperparameter Evolution & Ensembling:** If given access to enterprise-grade A100 GPUs, deploy Optuna for learning rate tuning and blend the YOLOv8s champion with an RT-DETR model using WBF.
+*   **Instance Segmentation:** Upgrade from object detection (bounding boxes ) to instance segmentation (YOLOv8-seg) to calculate the exact square footage of roof damage for insurance payouts.
