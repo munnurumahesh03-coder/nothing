@@ -1,69 +1,54 @@
-# 🤖 Agentic SQL Data Analyst | Enterprise BI Copilot
+# 📄 Enterprise Document AI & RAG Engine
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg )](https://www.python.org/ )
-[![Streamlit](https://img.shields.io/badge/Streamlit-Live-FF4B4B.svg )](https://streamlit.io/ )
-[![LangChain](https://img.shields.io/badge/LangChain-Agentic-green.svg )](https://python.langchain.com/ )
-[![Groq](https://img.shields.io/badge/Groq-Llama_3_120B-black.svg )](https://groq.com/ )
-[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57.svg )](https://www.sqlite.org/ )
+[![Streamlit](https://img.shields.io/badge/Streamlit-Live-FF4B4B.svg )](https://enterprise-rag-document-ai-aebfomlonaecv4gwvijn9g.streamlit.app/ )
+[![LangChain](https://img.shields.io/badge/LangChain-Framework-green.svg )](https://langchain.com/ )
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-orange.svg )](https://www.trychroma.com/ )
 
-### 🔴 [Live Application: Launch the Agentic SQL Analyst Here](https://agentic-sql-data-analyst-pzbxqtbysn4zjnbnbsuq5a.streamlit.app/ )
+### 🚀 Live Application: [Try the Enterprise RAG Engine Here](https://enterprise-rag-document-ai-aebfomlonaecv4gwvijn9g.streamlit.app/ )
 
----
+## 📌 Overview
+This project is a Universal Retrieval-Augmented Generation (RAG) SaaS platform designed to bridge the gap between Large Language Models and private, unstructured enterprise data. It allows users to upload any PDF document (research papers, HR manuals, financial reports) and instantly query it using natural language. The system is strictly engineered to eliminate LLM hallucinations by grounding all answers exclusively in the retrieved vector context.
 
-## 📖 The Problem: Why Traditional RAG Fails
-* **Data Bottlenecks:** Business stakeholders constantly rely on data engineering teams to write custom SQL queries, slowing down decision-making.
-* **Tabular Data Hallucinations:** Standard RAG (Retrieval-Augmented Generation) systems are built for unstructured text (PDFs, docs) and hallucinate wildly when asked to perform math or aggregations on tabular data.
-* **Static Dashboards:** Traditional BI tools (Tableau, PowerBI) are rigid and cannot answer ad-hoc, zero-shot questions outside of their pre-built visuals.
+## 🎯 Business Use Cases
+* **Legal & Compliance:** Instantly query massive contracts for specific clauses without manual reading.
+* **Technical Research:** Extract exact mathematical formulas, parameters, and methodologies from dense AI research papers.
+* **Enterprise HR:** Allow employees to chat with company policy documents to get instant, accurate answers.
 
-## 💡 The Solution: Agentic AI
-* **Autonomous SQL Generation:** Acts as a virtual Data Analyst that translates natural language directly into optimized SQL.
-* **Deterministic Execution:** Instead of guessing the answer, the Agent executes the SQL directly against the database, ensuring 100% factual, mathematically correct outputs.
-* **Democratized Analytics:** Allows non-technical users to query complex relational databases using plain English.
+## 🧠 The RAG Architecture Pipeline
+1. **Document Ingestion:** The user uploads a PDF. `PyPDFLoader` extracts the raw text while preserving document structure.
+2. **Semantic Chunking:** The text is passed through a `RecursiveCharacterTextSplitter`. It is chopped into 1000-character chunks with a 200-character overlap to ensure sentences are not cut in half and semantic context is preserved.
+3. **Vector Embedding:** Each chunk is processed by HuggingFace's `all-MiniLM-L6-v2` embedding model, translating the human text into high-dimensional mathematical vectors.
+4. **Vector Storage & Search:** These vectors are stored in **ChromaDB**. When a user asks a question, the query is embedded, and ChromaDB performs a rapid similarity search to retrieve the top 3 most relevant chunks.
+5. **Contextual Generation:** The retrieved chunks are injected into a strict LangChain prompt template. The Groq LLM (`qwen/qwen3.8-27b`) reads the context and synthesizes a final, hallucination-free answer.
 
----
+## ⚙️ Key Engineering Decisions
+| Component | Technology Chosen | Engineering Rationale |
+| :--- | :--- | :--- |
+| **Vector Database** | ChromaDB | Lightweight, in-memory vector store perfect for rapid prototyping and Streamlit Cloud deployment without external database hosting. |
+| **Embedding Model** | `all-MiniLM-L6-v2` | Open-source HuggingFace model that provides an optimal balance between semantic accuracy and CPU-based inference speed. |
+| **LLM Inference** | Groq (Qwen 27B) | Groq's LPU architecture provides ultra-low latency generation, ensuring the chat interface feels instantaneous. |
+| **Anti-Hallucination** | Strict Prompting | Engineered the system prompt to explicitly command the LLM to output *"I cannot answer this"* if the vector search returns irrelevant context. |
 
-## ⚙️ System Architecture & The ReAct Workflow
-This system bypasses standard prompt-and-response mechanics by utilizing the **ReAct (Reasoning + Acting)** framework via LangChain's SQL Toolkit.
-
-* **Step 1: Schema Discovery (Action):** The Agent autonomously triggers the `sql_db_schema` tool to read the table structures, column names, and data types.
-* **Step 2: Query Formulation (Thought):** The LLM reasons about the user's question and writes a highly specific SQL query.
-* **Step 3: Syntax Validation (Action):** The Agent passes the query through a `sql_db_query_checker` to ensure it is safe and valid before execution.
-* **Step 4: Execution & Self-Correction (Observation):** The Agent runs the query. **Crucially, if the SQL throws an error, the Agent reads the traceback and autonomously rewrites the query until it succeeds.**
-* **Step 5: Synthesis:** The raw numerical output is passed back to the LLM to be formatted into a clean, professional natural language response.
-
----
-
-## ✨ Key Technical Capabilities
-* **Zero-Shot Querying:** Handles unseen questions without requiring pre-defined SQL templates.
-* **Complex Aggregations:** Flawlessly executes `GROUP BY`, `ORDER BY`, `LIMIT`, and multi-condition `WHERE` clauses.
-* **Ultra-Low Latency:** Powered by Groq's LPU inference engine, allowing a massive 120B parameter model to reason and execute in milliseconds.
-* **Stateful UI:** Built with Streamlit to maintain chat history and provide a seamless conversational experience.
-
----
-
-## 🛠️ Tech Stack & Engineering Rationale
-* **Frontend (Streamlit):** Chosen for rapid deployment of data-centric, interactive web applications.
-* **Orchestration (LangChain):** Utilized for its robust `create_sql_agent` toolkit and seamless tool-binding capabilities.
-* **The Brain (Groq / Llama-3 120B):** Selected over standard OpenAI models to demonstrate expertise in Open-Source LLMs and high-speed inference optimization.
-* **Data Layer (SQLite3):** A lightweight, serverless relational database containing 9,800+ rows of Superstore Sales data, perfect for edge deployment.
-
----
+## 📁 Repository Structure
+* `app.py`: The main Streamlit application containing the UI, file uploader, and LangChain LCEL (LangChain Expression Language) pipeline.
+* `Enterprise_RAG_Architecture.ipynb`: The backend prototyping notebook demonstrating the step-by-step vector math and document chunking logic.
+* `requirements.txt`: Dynamically generated dependencies optimized for Streamlit Community Cloud deployment.
 
 ## 💻 Local Installation & Setup
-
-To run this project locally on your machine, run the following commands in your terminal:
+If you wish to run this RAG pipeline locally on your own machine:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/Agentic-SQL-Data-Analyst.git
-cd Agentic-SQL-Data-Analyst
+git clone https://github.com/YOUR_USERNAME/Enterprise-RAG-Document-AI.git
+cd Enterprise-RAG-Document-AI
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Set your Groq API Key (Linux/Mac )
-export GROQ_API_KEY="your_api_key_here"
-# (If on Windows Command Prompt, use: set GROQ_API_KEY="your_api_key_here")
+# 3. Set up your Groq API Key
+mkdir .streamlit
+echo 'GROQ_API_KEY = "your_api_key_here"' > .streamlit/secrets.toml
 
 # 4. Launch the application
 streamlit run app.py
